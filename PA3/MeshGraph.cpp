@@ -150,82 +150,85 @@ void MeshGraph::PaintInRangeGeodesic(std::vector<Color>& outputColorAllVertex,
                                     int maxDepth, FilterType type,
                                     double alpha) const
 {
-    int n = TotalVertexCount();
-    if (vertexId >= n || vertexId < 0)
-        outputColorAllVertex.resize(0);
-    else
+    if (maxDepth >= 0)
     {
-        outputColorAllVertex.resize(n);
-        for (int i = 0; i < n; i++)
+        int n = TotalVertexCount();
+        if (vertexId >= n || vertexId < 0)
+            outputColorAllVertex.resize(0);
+        else
         {
-            Color c = {0,0,0};
-            outputColorAllVertex[i] = c;
-        }
-        
-        std::vector<double> distance(n, INFINITY);
-        std::vector<bool> visited(n,false);
-        
-        BinaryHeap q;
-        
-        int outUniqueId; double outWeight;
-        
-        for (int i = 0; i < adjList.size(); i++)
-        {
-            for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
-                q.Add((*it)->id,(*it)->id);
-            for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
+            outputColorAllVertex.resize(n);
+            for (int i = 0; i < n; i++)
             {
-                q.PopHeap(outUniqueId, outWeight);
-                (*it)->id = outUniqueId;
-            }    
-        }
-        
-        int weight = 0;
-        q.Add(vertexId, weight++); // don't forget weight++
-        distance[vertexId] = 0;
-        visited[vertexId] = true;
-        
-        while (maxDepth--)
-        {
-            int size = q.HeapSize();
-            while (size--)
-            {
-                q.PopHeap(outUniqueId, outWeight);
-                for (std::list<Vertex*>::const_iterator it = adjList[outUniqueId].begin(); it != adjList[outUniqueId].end(); it++)
-                {
-                    if (!visited[(*it)->id])
-                    {
-                        q.Add((*it)->id, weight++);
-                        distance[(*it)->id] = distance[outUniqueId] + Double3::Distance((*it)->position3D, vertices[outUniqueId].position3D);    
-                        visited[(*it)->id] = true;
-                    }
-                } 
+                Color c = {0,0,0};
+                outputColorAllVertex[i] = c;
             }
-        }
-        for (int i = 0; i < TotalVertexCount(); i++)
-        {
-            if (visited[i])
+            
+            std::vector<double> distance(n, INFINITY);
+            std::vector<bool> visited(n,false);
+            
+            BinaryHeap q;
+            
+            int outUniqueId; double outWeight;
+            
+            for (int i = 0; i < adjList.size(); i++)
             {
-                double red = (double)color.r, green = (double)color.g, blue = (double)color.b;
-                if (type == FILTER_BOX)
+                for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
+                    q.Add((*it)->id,(*it)->id);
+                for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
                 {
-                    Color filtered_Color = 
+                    q.PopHeap(outUniqueId, outWeight);
+                    (*it)->id = outUniqueId;
+                }    
+            }
+            
+            int weight = 0;
+            q.Add(vertexId, weight++); // don't forget weight++
+            distance[vertexId] = 0;
+            visited[vertexId] = true;
+            
+            while (maxDepth--)
+            {
+                int size = q.HeapSize();
+                while (size--)
+                {
+                    q.PopHeap(outUniqueId, outWeight);
+                    for (std::list<Vertex*>::const_iterator it = adjList[outUniqueId].begin(); it != adjList[outUniqueId].end(); it++)
                     {
-                        (unsigned char) (boxFilter(distance[i], alpha)*red),
-                        (unsigned char) (boxFilter(distance[i], alpha)*green),
-                        (unsigned char) (boxFilter(distance[i], alpha)*blue)
-                    };
-                    outputColorAllVertex[i] = filtered_Color;   
+                        if (!visited[(*it)->id])
+                        {
+                            q.Add((*it)->id, weight++);
+                            distance[(*it)->id] = distance[outUniqueId] + Double3::Distance((*it)->position3D, vertices[outUniqueId].position3D);    
+                            visited[(*it)->id] = true;
+                        }
+                    } 
                 }
-                else if (type == FILTER_GAUSSIAN)
+            }
+            for (int i = 0; i < TotalVertexCount(); i++)
+            {
+                if (visited[i])
                 {
-                    Color filtered_Color = 
+                    double red = (double)color.r, green = (double)color.g, blue = (double)color.b;
+                    if (type == FILTER_BOX)
                     {
-                        (unsigned char) (gaussianFilter(distance[i], alpha)*red),
-                        (unsigned char) (gaussianFilter(distance[i], alpha)*green),
-                        (unsigned char) (gaussianFilter(distance[i], alpha)*blue)
-                    };
-                    outputColorAllVertex[i] = filtered_Color;   
+                        Color filtered_Color = 
+                        {
+                            (unsigned char) (boxFilter(distance[i], alpha)*red),
+                            (unsigned char) (boxFilter(distance[i], alpha)*green),
+                            (unsigned char) (boxFilter(distance[i], alpha)*blue)
+                        };
+                        outputColorAllVertex[i] = filtered_Color;   
+                    }
+                    else if (type == FILTER_GAUSSIAN)
+                    {
+                        Color filtered_Color = 
+                        {
+                            (unsigned char) (gaussianFilter(distance[i], alpha)*red),
+                            (unsigned char) (gaussianFilter(distance[i], alpha)*green),
+                            (unsigned char) (gaussianFilter(distance[i], alpha)*blue)
+                        };
+                        outputColorAllVertex[i] = filtered_Color;   
+                    }
                 }
             }
         }
@@ -237,84 +240,87 @@ void MeshGraph::PaintInRangeEuclidian(std::vector<Color>& outputColorAllVertex,
                                       int maxDepth, FilterType type,
                                       double alpha) const
 {
-    int n = TotalVertexCount();
-    if (vertexId >= n || vertexId < 0)
-        outputColorAllVertex.resize(0);
-    else
+    if (maxDepth >= 0)
     {
-        outputColorAllVertex.resize(n);
-        for (int i = 0; i < n; i++)
+        int n = TotalVertexCount();
+        if (vertexId >= n || vertexId < 0)
+            outputColorAllVertex.resize(0);
+        else
         {
-            Color c = {0,0,0};
-            outputColorAllVertex[i] = c;
-        }
-        
-        std::vector<double> distance(n, INFINITY);
-        for (int i = 0; i < n; i++)
-            distance[i] = Double3::Distance(vertices[vertexId].position3D, vertices[i].position3D);
-    
-        std::vector<bool> visited(n,false);
-        
-        BinaryHeap q;
-        
-        int outUniqueId; double outWeight;
-        
-        for (int i = 0; i < adjList.size(); i++)
-        {
-            for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
-                q.Add((*it)->id,(*it)->id);
-            for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
+            outputColorAllVertex.resize(n);
+            for (int i = 0; i < n; i++)
             {
-                q.PopHeap(outUniqueId, outWeight);
-                (*it)->id = outUniqueId;
-            }    
-        }
-        
-        int weight = 0;
-        q.Add(vertexId, weight++); // don't forget weight++
-        distance[vertexId] = 0;
-        visited[vertexId] = true;
-        
-        while (maxDepth--)
-        {
-            int size = q.HeapSize();
-            while (size--)
-            {
-                q.PopHeap(outUniqueId, outWeight);
-                for (std::list<Vertex*>::const_iterator it = adjList[outUniqueId].begin(); it != adjList[outUniqueId].end(); it++)
-                {
-                    if (!visited[(*it)->id])
-                    {
-                        q.Add((*it)->id, weight++);
-                        visited[(*it)->id] = true;
-                    }
-                } 
+                Color c = {0,0,0};
+                outputColorAllVertex[i] = c;
             }
-        }
-        for (int i = 0; i < TotalVertexCount(); i++)
-        {
-            if (visited[i])
+            
+            std::vector<double> distance(n, INFINITY);
+            for (int i = 0; i < n; i++)
+                distance[i] = Double3::Distance(vertices[vertexId].position3D, vertices[i].position3D);
+        
+            std::vector<bool> visited(n,false);
+            
+            BinaryHeap q;
+            
+            int outUniqueId; double outWeight;
+            
+            for (int i = 0; i < adjList.size(); i++)
             {
-                double red = (double)color.r, green = (double)color.g, blue = (double)color.b;
-                if (type == FILTER_BOX)
+                for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
+                    q.Add((*it)->id,(*it)->id);
+                for (std::list<Vertex*>::const_iterator it = adjList[i].begin(); it != adjList[i].end(); it++)
                 {
-                    Color filtered_Color = 
+                    q.PopHeap(outUniqueId, outWeight);
+                    (*it)->id = outUniqueId;
+                }    
+            }
+            
+            int weight = 0;
+            q.Add(vertexId, weight++); // don't forget weight++
+            distance[vertexId] = 0;
+            visited[vertexId] = true;
+            
+            while (maxDepth--)
+            {
+                int size = q.HeapSize();
+                while (size--)
+                {
+                    q.PopHeap(outUniqueId, outWeight);
+                    for (std::list<Vertex*>::const_iterator it = adjList[outUniqueId].begin(); it != adjList[outUniqueId].end(); it++)
                     {
-                        (unsigned char) (boxFilter(distance[i], alpha)*red),
-                        (unsigned char) (boxFilter(distance[i], alpha)*green),
-                        (unsigned char) (boxFilter(distance[i], alpha)*blue)
-                    };
-                    outputColorAllVertex[i] = filtered_Color;   
+                        if (!visited[(*it)->id])
+                        {
+                            q.Add((*it)->id, weight++);
+                            visited[(*it)->id] = true;
+                        }
+                    } 
                 }
-                else if (type == FILTER_GAUSSIAN)
+            }
+            for (int i = 0; i < TotalVertexCount(); i++)
+            {
+                if (visited[i])
                 {
-                    Color filtered_Color = 
+                    double red = (double)color.r, green = (double)color.g, blue = (double)color.b;
+                    if (type == FILTER_BOX)
                     {
-                        (unsigned char) (gaussianFilter(distance[i], alpha)*red),
-                        (unsigned char) (gaussianFilter(distance[i], alpha)*green),
-                        (unsigned char) (gaussianFilter(distance[i], alpha)*blue)
-                    };
-                    outputColorAllVertex[i] = filtered_Color;   
+                        Color filtered_Color = 
+                        {
+                            (unsigned char) (boxFilter(distance[i], alpha)*red),
+                            (unsigned char) (boxFilter(distance[i], alpha)*green),
+                            (unsigned char) (boxFilter(distance[i], alpha)*blue)
+                        };
+                        outputColorAllVertex[i] = filtered_Color;   
+                    }
+                    else if (type == FILTER_GAUSSIAN)
+                    {
+                        Color filtered_Color = 
+                        {
+                            (unsigned char) (gaussianFilter(distance[i], alpha)*red),
+                            (unsigned char) (gaussianFilter(distance[i], alpha)*green),
+                            (unsigned char) (gaussianFilter(distance[i], alpha)*blue)
+                        };
+                        outputColorAllVertex[i] = filtered_Color;   
+                    }
                 }
             }
         }
