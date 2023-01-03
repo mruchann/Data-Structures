@@ -87,7 +87,7 @@ void MeshGraph::PaintInBetweenVertex(std::vector<Color>& outputColorAllVertex,
                                      const Color& color) const
 {
     int n = TotalVertexCount();
-    if (vertexIdFrom >= n || vertexIdFrom < 0 || vertexIdTo >= n || vertexIdTo < 0)
+    if ((vertexIdFrom >= n) || (vertexIdFrom < 0) || (vertexIdTo >= n) || (vertexIdTo < 0))
         outputColorAllVertex.resize(0);
     else
     {
@@ -127,6 +127,18 @@ void MeshGraph::PaintInBetweenVertex(std::vector<Color>& outputColorAllVertex,
         while (vertexIdTo != -1)
         {
             outputColorAllVertex[vertexIdTo] = color;
+            if (previous[vertexIdTo] == -1)
+            {
+                if (vertexIdTo != vertexIdFrom)
+                {
+                   for (int i = 0; i < n; i++)
+                    {
+                        Color c = {0,0,0};
+                        outputColorAllVertex[i] = c;
+                    }
+                    break; 
+                }
+            }      
             vertexIdTo = previous[vertexIdTo];
         }
     }
